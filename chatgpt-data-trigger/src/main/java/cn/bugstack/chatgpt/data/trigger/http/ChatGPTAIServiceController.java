@@ -1,6 +1,7 @@
 package cn.bugstack.chatgpt.data.trigger.http;
 
 import cn.bugstack.chatgpt.common.Constants;
+import cn.bugstack.chatgpt.data.domain.auth.service.IAuthService;
 import cn.bugstack.chatgpt.data.domain.openai.model.aggregates.ChatProcessAggregate;
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.MessageEntity;
 import cn.bugstack.chatgpt.data.domain.openai.service.IChatService;
@@ -26,6 +27,9 @@ public class ChatGPTAIServiceController {
 
     @Resource
     private IChatService chatService;
+
+    @Resource
+    private IAuthService authService;
     public ChatGPTAIServiceController()
     {
         log.info("我被创建了");
@@ -71,6 +75,9 @@ public class ChatGPTAIServiceController {
             response.setCharacterEncoding("UTF-8");
             response.setHeader("Cache-Control", "no-cache");
 
+            ResponseBodyEmitter emitter = new ResponseBodyEmitter(3 * 60 * 1000L);
+            boolean success = authService.checkToken(token);
+
             // 2. 构建参数
             ChatProcessAggregate chatProcessAggregate = ChatProcessAggregate.builder()
                     .token(token)
@@ -83,7 +90,7 @@ public class ChatGPTAIServiceController {
                                     .build())
                             .collect(Collectors.toList()))
                     .build();
-            return chatService.completions(chatProcessAggregate);
+            return chatService.completions(emitter,chatProcessAggregate);
         } catch (Exception e) {
             log.error("流式应答，请求模型：{} 发生异常", request.getModel(), e);
             throw new ChatGPTException(e.getMessage());

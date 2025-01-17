@@ -1,1 +1,0 @@
-package cn.bugstack.chatgpt.data.trigger.http;

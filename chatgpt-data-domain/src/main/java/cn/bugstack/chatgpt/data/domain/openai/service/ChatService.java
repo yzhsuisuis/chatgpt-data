@@ -14,11 +14,12 @@ import okhttp3.sse.EventSourceListener;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+@Service
 public class ChatService extends AbstractChatService{
 
     @Override
@@ -28,7 +29,7 @@ public class ChatService extends AbstractChatService{
                                 .content(entity.getContent())
                                 .name(entity.getName())
 //                        这里相当于对这个进行一个约束
-                                .role(Constants.Role.valueOf(entity.getRole()))
+                                .role(Constants.Role.valueOf(entity.getRole().toUpperCase()))
                                 .build()
 
                 ).collect(Collectors.toList());
@@ -36,7 +37,7 @@ public class ChatService extends AbstractChatService{
                 .builder()
                 .stream(true)
                 .messages(messages)
-                .model("gpt-3.5-turbo")
+                .model(chatProcess.getModel())
                 .build();
 //        openAiSession.completions(chatCompletion,
 //                new EventSourceListener() {

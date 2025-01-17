@@ -16,31 +16,24 @@ public abstract class AbstractChatService implements IChatService{
 
 
     @Override
-    public ResponseBodyEmitter completions(ChatProcessAggregate chatProcess) {
-//        token鉴权
-        if(!"b8b6".equals(chatProcess.getToken()))
-        {
-            throw new ChatGPTException(Constants.ResponseCode.TOKEN_ERROR.getCode(),Constants.ResponseCode.TOKEN_ERROR.getInfo());
-        }
-        //        ResponseBodyEmitter是springMVC提供的一个关于流式响应的一个类
-        // 2. 请求应答
-        ResponseBodyEmitter emitter = new ResponseBodyEmitter(3 * 60 * 1000L);
+    public ResponseBodyEmitter completions(ResponseBodyEmitter emitter, ChatProcessAggregate chatProcess) {
+        // 1. 请求应答
         emitter.onCompletion(() -> {
             log.info("流式问答请求完成，使用模型：{}", chatProcess.getModel());
         });
+        emitter.onError(throwable -> log.error("流式问答请求疫情，使用模型：{}", chatProcess.getModel(), throwable));
 
-        emitter.onError(throwable -> log.error("流式问答请求异常，使用模型：{}", chatProcess.getModel(), throwable));
+        // 2. 应答处理
         try {
-            this.doMessageResponse(chatProcess,emitter);
-
-        }catch (Exception e)
-        {
-            throw new ChatGPTException(Constants.ResponseCode.UN_ERROR.getCode(),Constants.ResponseCode.UN_ERROR.getInfo());
-
+            this.doMessageResponse(chatProcess, emitter);
+        } catch (Exception e) {
+            throw new ChatGPTException(Constants.ResponseCode.UN_ERROR.getCode(), Constants.ResponseCode.UN_ERROR.getInfo());
         }
 
-
-        return null;
+        // 3. 返回结果
+        return emitter;
     }
+
     protected abstract void doMessageResponse(ChatProcessAggregate chatProcess, ResponseBodyEmitter responseBodyEmitter) throws JsonProcessingException;
+
 }

@@ -8,6 +8,7 @@ import cn.bugstack.chatgpt.data.types.sdk.weixin.XmlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -19,7 +20,8 @@ import java.util.Date;
  * @create 2023-08-05 16:50
  */
 @Slf4j
-@RestController
+@Controller
+//@RestController
 @RequestMapping("/api/${app.config.api-version}/wx/portal/{appid}")
 public class WeiXinPortalController {
 
@@ -31,6 +33,10 @@ public class WeiXinPortalController {
 
     @Resource
     private IWeiXinBehaviorService weiXinBehaviorService;
+    public WeiXinPortalController()
+    {
+        System.out.println("我被注册了");
+    }
 
     /**
      * 处理微信服务器发来的get请求，进行签名的验证【apix.natapp1.cc 是我在 <a href="https://natapp.cn/">https://natapp.cn</a> 购买的渠道，你需要自己购买一个使用】

@@ -22,8 +22,14 @@ import javax.annotation.Resource;
 @RequestMapping("/api/${app.config.api-version}/auth/")
 public class AuthController {
 
+
     @Resource
     private IAuthService authService;
+
+    public AuthController()
+    {
+        log.info("我被创建了");
+    }
 
     /**
      * 【apix.natapp1.cc 是我在 <a href="https://natapp.cn/">https://natapp.cn</a> 购买的渠道，你需要自己购买一个使用】
