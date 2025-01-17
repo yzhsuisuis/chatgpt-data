@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @create 2023-07-16 07:43
  */
 @SpringBootApplication
+@Configurable
 public class Application {
 
     public static void main(String[] args){

@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8091
 
 # 应用配置
 app:
@@ -25,12 +25,16 @@ chatgpt:
   sdk:
     config:
       # 官网地址 https://api.openai.com/
-      api-host: https://bd86375d819592c0637c64897949273d.api-forwards.com/
+      api-host: https://79e984a3423cc9a81cff6c315aace3c8.api-forwards.com/
       # 官网申请 https://platform.openai.com/account/api-keys
-      api-key: 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
+      api-key: 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
       # 自主申请 http://api.xfg.im:8080/authorize?username=xfg&password=123 - 有时效性，主要为了大家学习使用
 #      auth-token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4ZmciLCJleHAiOjE2OTAwMzI5MDQsImlhdCI6MTY5MDAyOTMwNCwianRpIjoiOTBkNzc5NjYtOWM5MS00MGVmLWJmNjktNzYzNDljNmUyMDkyIiwidXNlcm5hbWUiOiJ4ZmcifQ.x7P6Rc249SgbxpqWhgKahYP8A8AllNI_26DV08a1AZs
-
+wx:
+  config:
+    originalid: gh_3bbe530ed638
+    appid: wx7cc0de005680424b
+    token: b8b6
 # 日志
 logging:
   level:

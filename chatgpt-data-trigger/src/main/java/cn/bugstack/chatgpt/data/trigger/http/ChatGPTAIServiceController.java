@@ -21,11 +21,17 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController()
 @CrossOrigin("${app.config.cross-origin}")
-@RequestMapping("/api/${app.config.api-version}/")
+@RequestMapping("/api/${app.config.api-version}/chatgpt/")
 public class ChatGPTAIServiceController {
 
     @Resource
     private IChatService chatService;
+    public ChatGPTAIServiceController()
+    {
+        log.info("我被创建了");
+        System.out.println("MyController is being initialized by Spring!");
+    }
+
 
 /*
 * 对异步流式响应方法的实验
@@ -55,7 +61,7 @@ public class ChatGPTAIServiceController {
 
         return emitter;
     }
-    @RequestMapping(value = "chat/completions", method = RequestMethod.POST)
+    @RequestMapping(value = "/chat/completions", method = RequestMethod.POST)
     public ResponseBodyEmitter completionsStream(@RequestBody ChatGPTRequestDTO request, @RequestHeader("Authorization") String token, HttpServletResponse response) {
         log.info("流式问答请求开始，使用模型：{} 请求信息：{}", request.getModel(), JSON.toJSONString(request.getMessages()));
         try {
