@@ -3,6 +3,10 @@ package cn.bugstack.chatgpt.data.domain.openai.service;
 import cn.bugstack.chatgpt.common.Constants;
 import cn.bugstack.chatgpt.data.domain.openai.model.aggregates.ChatProcessAggregate;
 
+import cn.bugstack.chatgpt.data.domain.openai.model.entity.RuleLogicEntity;
+import cn.bugstack.chatgpt.data.domain.openai.model.valobj.LogicCheckTypeVO;
+import cn.bugstack.chatgpt.data.domain.openai.service.rule.ILogicFilter;
+import cn.bugstack.chatgpt.data.domain.openai.service.rule.factory.DefaultLogicFactory;
 import cn.bugstack.chatgpt.domain.chat.ChatChoice;
 import cn.bugstack.chatgpt.domain.chat.ChatCompletionRequest;
 import cn.bugstack.chatgpt.domain.chat.ChatCompletionResponse;
@@ -17,13 +21,19 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
+import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 @Service
 public class ChatService extends AbstractChatService{
 
+    @Resource
+    private DefaultLogicFactory logicFactory;
+
     @Override
     protected void doMessageResponse(ChatProcessAggregate chatProcess, ResponseBodyEmitter emitter) throws JsonProcessingException {
+//是在这一个类里面,但是你的方法不对
         List<Message> messages = chatProcess.getMessages().stream()
                 .map(entity -> Message.builder()
                                 .content(entity.getContent())
@@ -103,6 +113,28 @@ public class ChatService extends AbstractChatService{
 
             }
         });
+
+
+    }
+
+    @Override
+    protected RuleLogicEntity<ChatProcessAggregate> doCheckLogic(ChatProcessAggregate chatProcess, String... logicfilters) throws Exception {
+        RuleLogicEntity<ChatProcessAggregate> ruleLogicEntity = null;
+        Map<String, ILogicFilter> logicFilterMap = logicFactory.openLogicFilter();
+        for (String logicfilter : logicfilters) {
+//            能在map里找到
+            ruleLogicEntity = logicFilterMap.get(logicfilter).filter(chatProcess);
+            if(!LogicCheckTypeVO.SUCCESS.getCode().equals(ruleLogicEntity.getType()))
+            {
+//                被拦截了
+                return ruleLogicEntity;
+            }
+        }
+        return ruleLogicEntity!=null ? ruleLogicEntity: RuleLogicEntity.<ChatProcessAggregate>builder()
+                .type(LogicCheckTypeVO.SUCCESS)
+                .data(chatProcess).build();
+//        有可能根本就没有logicFilter的设置所以就直接
+
 
 
     }

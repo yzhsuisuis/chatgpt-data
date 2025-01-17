@@ -21,5 +21,13 @@ public class GoogleGuavaCodeCacheConfig {
                 .expireAfterWrite(3, TimeUnit.MINUTES)
                 .build();
     }
+//    用户访问频次限制限制
+    @Bean(name = "visitCache")
+    public Cache<String,Integer> visitCache()
+    {
+        return CacheBuilder.newBuilder()
+                .expireAfterWrite(12,TimeUnit.HOURS)
+                .build();
+    }
 
 }

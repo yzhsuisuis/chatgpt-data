@@ -33,9 +33,10 @@ public class WeiXinPortalController {
 
     @Resource
     private IWeiXinBehaviorService weiXinBehaviorService;
+
     public WeiXinPortalController()
     {
-        System.out.println("我被注册了");
+        log.info("我被注册了");
     }
 
     /**

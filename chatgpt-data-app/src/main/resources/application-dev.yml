@@ -8,6 +8,10 @@ app:
     api-version: v1
     # 跨域，开发阶段可以设置为 * 不限制
     cross-origin: '*'
+    # 访问频次限制
+    limit-count: 10
+    # 白名单，不做频次拦截【微信的openai】oxfA9w8-23yvwTmo2ombz0E4zJv4
+    white-list: ojbZUv18lbmriaTjcCWBYkOrSbHA
 
 # 线程池配置
 thread:
@@ -25,9 +29,9 @@ chatgpt:
   sdk:
     config:
       # 官网地址 https://api.openai.com/
-      api-host: https://79e984a3423cc9a81cff6c315aace3c8.api-forwards.com/
+      api-host: https://api.v3.cm/
       # 官网申请 https://platform.openai.com/account/api-keys
-      api-key: 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
+      api-key: sk-qCLfaKkF8EOQ6mZj4d7d953681B04f50B7A718737dEd9961
       # 自主申请 http://api.xfg.im:8080/authorize?username=xfg&password=123 - 有时效性，主要为了大家学习使用
 #      auth-token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4ZmciLCJleHAiOjE2OTAwMzI5MDQsImlhdCI6MTY5MDAyOTMwNCwianRpIjoiOTBkNzc5NjYtOWM5MS00MGVmLWJmNjktNzYzNDljNmUyMDkyIiwidXNlcm5hbWUiOiJ4ZmcifQ.x7P6Rc249SgbxpqWhgKahYP8A8AllNI_26DV08a1AZs
 wx:

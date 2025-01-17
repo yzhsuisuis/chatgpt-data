@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
  * @create 2023-07-22 21:24
  */
 public class Constants {
+    public final static String SPLIT = ",";
 
     @AllArgsConstructor
     @NoArgsConstructor

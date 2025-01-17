@@ -1,11 +1,11 @@
 package cn.bugstack.chatgpt.data.trigger.http;
 
-import cn.bugstack.chatgpt.common.Constants;
 import cn.bugstack.chatgpt.data.domain.auth.service.IAuthService;
 import cn.bugstack.chatgpt.data.domain.openai.model.aggregates.ChatProcessAggregate;
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.MessageEntity;
 import cn.bugstack.chatgpt.data.domain.openai.service.IChatService;
 import cn.bugstack.chatgpt.data.trigger.http.dto.ChatGPTRequestDTO;
+import cn.bugstack.chatgpt.data.types.common.Constants;
 import cn.bugstack.chatgpt.data.types.exception.ChatGPTException;
 import cn.bugstack.chatgpt.domain.chat.Message;
 import com.alibaba.fastjson.JSON;
@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -35,8 +36,6 @@ public class ChatGPTAIServiceController {
         log.info("我被创建了");
         System.out.println("MyController is being initialized by Spring!");
     }
-
-
 /*
 * 对异步流式响应方法的实验
 *
@@ -78,9 +77,23 @@ public class ChatGPTAIServiceController {
             ResponseBodyEmitter emitter = new ResponseBodyEmitter(3 * 60 * 1000L);
             boolean success = authService.checkToken(token);
 
+            if (!success) {
+                try {
+                    emitter.send(Constants.ResponseCode.TOKEN_ERROR.getCode());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                emitter.complete();
+                return emitter;
+            }
+
+            // 3. 获取 OpenID,然后把这个openid装入到,chatProcessAggregate体里面
+            String openid = authService.openid(token);
+            log.info("流式问答请求处理，openid:{} 请求模型:{}", openid, request.getModel());
+
             // 2. 构建参数
             ChatProcessAggregate chatProcessAggregate = ChatProcessAggregate.builder()
-                    .token(token)
+                    .openid(openid)
                     .model(request.getModel())
                     .messages(request.getMessages().stream()
                             .map(entity -> MessageEntity.builder()
