@@ -4,6 +4,7 @@ import cn.bugstack.chatgpt.common.Constants;
 import cn.bugstack.chatgpt.data.domain.openai.model.aggregates.ChatProcessAggregate;
 
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.RuleLogicEntity;
+import cn.bugstack.chatgpt.data.domain.openai.model.entity.UserAccountQuotaEntity;
 import cn.bugstack.chatgpt.data.domain.openai.model.valobj.LogicCheckTypeVO;
 import cn.bugstack.chatgpt.data.domain.openai.service.rule.ILogicFilter;
 import cn.bugstack.chatgpt.data.domain.openai.service.rule.factory.DefaultLogicFactory;
@@ -13,6 +14,7 @@ import cn.bugstack.chatgpt.domain.chat.ChatCompletionResponse;
 import cn.bugstack.chatgpt.domain.chat.Message;
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +27,7 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+@Slf4j
 @Service
 public class ChatService extends AbstractChatService{
 
@@ -118,13 +121,16 @@ public class ChatService extends AbstractChatService{
     }
 
     @Override
-    protected RuleLogicEntity<ChatProcessAggregate> doCheckLogic(ChatProcessAggregate chatProcess, String... logicfilters) throws Exception {
+    protected RuleLogicEntity<ChatProcessAggregate> doCheckLogic(ChatProcessAggregate chatProcess, UserAccountQuotaEntity userAccountQuotaEntity , String... logicfilters) throws Exception {
         RuleLogicEntity<ChatProcessAggregate> ruleLogicEntity = null;
         Map<String, ILogicFilter> logicFilterMap = logicFactory.openLogicFilter();
         for (String logicfilter : logicfilters) {
 //            能在map里找到
-            ruleLogicEntity = logicFilterMap.get(logicfilter).filter(chatProcess);
-            if(!LogicCheckTypeVO.SUCCESS.getCode().equals(ruleLogicEntity.getType()))
+//            在后面的用户的某些过滤的情况,需要使用到用户的信息,所以在这个时候,需要在外面先根据openid查询得到用户的信息,然后再传入进来
+//            而openid是根据用的token,然后使用authService.getopenid
+            ruleLogicEntity = logicFilterMap.get(logicfilter).filter(chatProcess,userAccountQuotaEntity);
+            log.info("过滤链是:{}",logicfilter);
+            if(!LogicCheckTypeVO.SUCCESS.equals(ruleLogicEntity.getType()))
             {
 //                被拦截了
                 return ruleLogicEntity;

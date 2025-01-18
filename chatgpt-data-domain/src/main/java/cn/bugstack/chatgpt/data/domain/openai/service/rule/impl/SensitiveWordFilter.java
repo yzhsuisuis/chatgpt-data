@@ -4,6 +4,7 @@ import cn.bugstack.chatgpt.data.domain.openai.annotation.LogicStrategy;
 import cn.bugstack.chatgpt.data.domain.openai.model.aggregates.ChatProcessAggregate;
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.MessageEntity;
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.RuleLogicEntity;
+import cn.bugstack.chatgpt.data.domain.openai.model.entity.UserAccountQuotaEntity;
 import cn.bugstack.chatgpt.data.domain.openai.model.valobj.LogicCheckTypeVO;
 import cn.bugstack.chatgpt.data.domain.openai.service.rule.ILogicFilter;
 import cn.bugstack.chatgpt.data.domain.openai.service.rule.factory.DefaultLogicFactory;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Component
 @LogicStrategy(logicMode = DefaultLogicFactory.LogicModel.SENSITIVE_WORD)
-public class SensitiveWordFilter implements ILogicFilter{
+public class SensitiveWordFilter implements ILogicFilter<UserAccountQuotaEntity>{
     @Resource
     private SensitiveWordBs words;
 
@@ -25,7 +26,7 @@ public class SensitiveWordFilter implements ILogicFilter{
     private String whiteListStr;
 
     @Override
-    public RuleLogicEntity<ChatProcessAggregate> filter(ChatProcessAggregate chatProcess) throws Exception {
+    public RuleLogicEntity<ChatProcessAggregate> filter(ChatProcessAggregate chatProcess, UserAccountQuotaEntity userAccountQuotaEntity) throws Exception {
 //        白名单不经历敏感词过滤,的步骤
         if (chatProcess.isWhiteList(whiteListStr)) {
             return RuleLogicEntity.<ChatProcessAggregate>builder()

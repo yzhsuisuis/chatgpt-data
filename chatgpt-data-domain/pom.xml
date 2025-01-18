@@ -63,6 +63,8 @@
             <groupId>com.github.houbb</groupId>
             <artifactId>sensitive-word</artifactId>
         </dependency>
+
+
     </dependencies>
 
     <build>
