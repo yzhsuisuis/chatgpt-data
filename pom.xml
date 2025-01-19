@@ -131,6 +131,17 @@
                 <artifactId>mysql-connector-java</artifactId>
                 <version>8.0.22</version>
             </dependency>
+
+            <dependency>
+                <groupId>com.github.wechatpay-apiv3</groupId>
+                <artifactId>wechatpay-java</artifactId>
+                <version>0.2.11</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.bugstack</groupId>
+                <artifactId>ltzf-sdk-java</artifactId>
+                <version>1.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace 指向对应的 Mapper 接口 -->
+<mapper namespace="cn.bugstack.chatgpt.data.infrastructure.dao.IOpenAIProductDao">
+
+    <resultMap id="openAiProductMap" type="cn.bugstack.chatgpt.data.infrastructure.po.OpenAIProductPO">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="product_name" property="productName"/>
+        <result column="product_desc" property="productDesc"/>
+<!--        <result column="product_model_types" property=""/>-->
+        <result column="quota" property="quota"/>
+        <result column="price" property="price"/>
+        <result column="sort" property="sort"/>
+        <result column="is_enabled" property="isEnabled"/>
+
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="queryProductByProductId" parameterType="java.lang.Integer"
+            resultMap="openAiProductMap">
+        SELECT product_id, product_name, product_desc, quota, price, is_enabled
+        FROM openai_product
+        WHERE product_id = #{productId}
+    </select>
+
+</mapper>
