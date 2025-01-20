@@ -6,6 +6,8 @@ import cn.bugstack.chatgpt.data.domain.openai.model.aggregates.ChatProcessAggreg
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.RuleLogicEntity;
 import cn.bugstack.chatgpt.data.domain.openai.model.entity.UserAccountQuotaEntity;
 import cn.bugstack.chatgpt.data.domain.openai.model.valobj.LogicCheckTypeVO;
+import cn.bugstack.chatgpt.data.domain.openai.service.channel.impl.ChatGLMService;
+import cn.bugstack.chatgpt.data.domain.openai.service.channel.impl.ChatGPTService;
 import cn.bugstack.chatgpt.data.domain.openai.service.rule.ILogicFilter;
 import cn.bugstack.chatgpt.data.domain.openai.service.rule.factory.DefaultLogicFactory;
 import cn.bugstack.chatgpt.domain.chat.ChatChoice;
@@ -34,91 +36,95 @@ public class ChatService extends AbstractChatService{
     @Resource
     private DefaultLogicFactory logicFactory;
 
-    @Override
-    protected void doMessageResponse(ChatProcessAggregate chatProcess, ResponseBodyEmitter emitter) throws JsonProcessingException {
-//是在这一个类里面,但是你的方法不对
-        List<Message> messages = chatProcess.getMessages().stream()
-                .map(entity -> Message.builder()
-                                .content(entity.getContent())
-                                .name(entity.getName())
-//                        这里相当于对这个进行一个约束
-                                .role(Constants.Role.valueOf(entity.getRole().toUpperCase()))
-                                .build()
+    public ChatService(ChatGPTService chatGPTService, ChatGLMService chatGLMService) {
+        super(chatGPTService, chatGLMService);
+    }
 
-                ).collect(Collectors.toList());
-        ChatCompletionRequest chatCompletion = ChatCompletionRequest
-                .builder()
-                .stream(true)
-                .messages(messages)
-                .model(chatProcess.getModel())
-                .build();
-//        openAiSession.completions(chatCompletion,
-//                new EventSourceListener() {
-//                    @Override
-//                    public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-////                相同对话的返回的相应块的id是相同的
+//    @Override
+//    protected void doMessageResponse(ChatProcessAggregate chatProcess, ResponseBodyEmitter emitter) throws JsonProcessingException {
+////是在这一个类里面,但是你的方法不对
+//        List<Message> messages = chatProcess.getMessages().stream()
+//                .map(entity -> Message.builder()
+//                                .content(entity.getContent())
+//                                .name(entity.getName())
+////                        这里相当于对这个进行一个约束
+//                                .role(Constants.Role.valueOf(entity.getRole().toUpperCase()))
+//                                .build()
 //
+//                ).collect(Collectors.toList());
+//        ChatCompletionRequest chatCompletion = ChatCompletionRequest
+//                .builder()
+//                .stream(true)
+//                .messages(messages)
+//                .model(chatProcess.getModel())
+//                .build();
+////        openAiSession.completions(chatCompletion,
+////                new EventSourceListener() {
+////                    @Override
+////                    public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
+//////                相同对话的返回的相应块的id是相同的
+////
+////                    }
+////                });
+//        openAiSession.chatCompletions(chatCompletion, new EventSourceListener() {
+//            @Override
+//            public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
+//                ChatCompletionResponse chatCompletionResponse = JSON.parseObject(data, ChatCompletionResponse.class);
+//                                    /*
+//                    {
+//  "id": "chatcmpl-123",
+//  "object": "chat.completion.chunk",
+//  "created": 1694268190,
+//  "model": "gpt-4o-mini",
+//  "system_fingerprint": "fp_44709d6fcb",
+//  "choices": [
+//    {
+//      "index": 0,
+//      "delta": {
+//        "role": "assistant",
+//        "content": ""
+//      },
+//      "logprobs": null,
+//      "finish_reason": null
+//    }
+//  ]
+//}
+//                    *
+//                    *
+//{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
+//{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"content":"Hello"},"logprobs":null,"finish_reason":null}]}
+//{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
+//
+//                    * */
+//                List<ChatChoice> choices = chatCompletionResponse.getChoices();
+//                for (ChatChoice choice : choices) {
+//                    Message delta = choice.getDelta();
+////                    根据他的语句来判断这个是该怎么个结束法
+//                    if(Constants.Role.ASSISTANT.getCode().equals(delta.getRole())) continue;
+//
+//                    String finishReason = choice.getFinishReason();
+//
+//                    if (StringUtils.isNoneBlank(finishReason) && "stop".equals(finishReason)) {
+//                        emitter.complete();
+//                        break;
 //                    }
-//                });
-        openAiSession.chatCompletions(chatCompletion, new EventSourceListener() {
-            @Override
-            public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-                ChatCompletionResponse chatCompletionResponse = JSON.parseObject(data, ChatCompletionResponse.class);
-                                    /*
-                    {
-  "id": "chatcmpl-123",
-  "object": "chat.completion.chunk",
-  "created": 1694268190,
-  "model": "gpt-4o-mini",
-  "system_fingerprint": "fp_44709d6fcb",
-  "choices": [
-    {
-      "index": 0,
-      "delta": {
-        "role": "assistant",
-        "content": ""
-      },
-      "logprobs": null,
-      "finish_reason": null
-    }
-  ]
-}
-                    *
-                    *
-{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
-{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"content":"Hello"},"logprobs":null,"finish_reason":null}]}
-{"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-4o-mini", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
-
-                    * */
-                List<ChatChoice> choices = chatCompletionResponse.getChoices();
-                for (ChatChoice choice : choices) {
-                    Message delta = choice.getDelta();
-//                    根据他的语句来判断这个是该怎么个结束法
-                    if(Constants.Role.ASSISTANT.getCode().equals(delta.getRole())) continue;
-
-                    String finishReason = choice.getFinishReason();
-
-                    if (StringUtils.isNoneBlank(finishReason) && "stop".equals(finishReason)) {
-                        emitter.complete();
-                        break;
-                    }
-
-                    // 发送信息
-                    try {
-                        emitter.send(delta.getContent());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-
-
-                }
 //
-
-            }
-        });
-
-
-    }
+//                    // 发送信息
+//                    try {
+//                        emitter.send(delta.getContent());
+//                    } catch (Exception e) {
+//                        throw new RuntimeException(e);
+//                    }
+//
+//
+//                }
+////
+//
+//            }
+//        });
+//
+//
+//    }
 
     @Override
     protected RuleLogicEntity<ChatProcessAggregate> doCheckLogic(ChatProcessAggregate chatProcess, UserAccountQuotaEntity userAccountQuotaEntity , String... logicfilters) throws Exception {

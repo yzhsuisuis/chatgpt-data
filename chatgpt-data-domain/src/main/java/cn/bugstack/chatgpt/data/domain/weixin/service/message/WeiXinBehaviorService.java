@@ -48,6 +48,7 @@ public class WeiXinBehaviorService implements IWeiXinBehaviorService {
             // 判断验证码 - 不考虑验证码重复问题
             if (StringUtils.isBlank(isExistCode)) {
                 // 创建验证码
+                //从这里就开始了
                 String code = RandomStringUtils.randomNumeric(4);
                 codeCache.put(code, userBehaviorMessageEntity.getOpenId());
                 codeCache.put(userBehaviorMessageEntity.getOpenId(), code);

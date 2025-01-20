@@ -71,6 +71,10 @@
             <groupId>cn.bugstack</groupId>
             <artifactId>ltzf-sdk-java</artifactId>
         </dependency>
+        <dependency>
+            <groupId>cn.bugstack</groupId>
+            <artifactId>chatglm-sdk-java</artifactId>
+        </dependency>
 
 
 
