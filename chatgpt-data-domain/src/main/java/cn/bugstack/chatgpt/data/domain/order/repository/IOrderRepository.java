@@ -7,6 +7,7 @@ import cn.bugstack.chatgpt.data.domain.order.model.entity.ShopCartEntity;
 import cn.bugstack.chatgpt.data.domain.order.model.entity.UnpaidOrderEntity;
 
 import java.text.ParseException;
+import java.util.List;
 
 /**
  * @author Fuzhengwei bugstack.cn @小傅哥
@@ -26,4 +27,18 @@ public interface IOrderRepository {
     void updateOrderPayInfo(PayOrderEntity payOrderEntity);
 
     boolean changeOrderPaySuccess(String out_trade_no, String total_fee, String order_no, String success_time) throws ParseException;
+
+    void deliverGoods(String orderId);
+
+    List<String> queryTimeoutCloseOrderList();
+
+    boolean changeOrderClose(String orderId);
+
+    List<String> queryNoPayNotifyOrder();
+
+    List<String> queryReplenishmentOrder();
+
+    List<ProductEntity> queryProductList();
+
+    String queryUserAccountQuota(String openid);
 }

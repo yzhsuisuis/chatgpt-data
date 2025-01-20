@@ -142,6 +142,13 @@
                 <artifactId>ltzf-sdk-java</artifactId>
                 <version>1.0</version>
             </dependency>
+            <!-- chatglm-sdk-java https://github.com/fuzhengwei/chatglm-sdk-java-->
+            <dependency>
+                <groupId>cn.bugstack</groupId>
+                <artifactId>chatglm-sdk-java</artifactId>
+                <version>2.2</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

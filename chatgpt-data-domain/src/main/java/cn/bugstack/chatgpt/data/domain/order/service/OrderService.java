@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -99,5 +100,40 @@ public class OrderService extends AbstractOrderService{
     public boolean changeOrderPaySuccess(String out_trade_no, String total_fee, String order_no, String success_time) throws ParseException {
 
         return orderRepository.changeOrderPaySuccess(out_trade_no,total_fee,order_no,success_time);
+    }
+
+    @Override
+    public void deliverGoods(String orderId) {
+        orderRepository.deliverGoods(orderId);
+    }
+
+    @Override
+    public List<String> queryTimeoutCloseOrderList() {
+        return orderRepository.queryTimeoutCloseOrderList();
+    }
+
+    @Override
+    public boolean changeOrderClose(String orderId) {
+        return orderRepository.changeOrderClose(orderId);
+    }
+
+    @Override
+    public List<String> queryNoPayNotifyOrder() {
+        return orderRepository.queryNoPayNotifyOrder();
+    }
+
+    @Override
+    public List<String> queryReplenishmentOrder() {
+        return orderRepository.queryReplenishmentOrder();
+    }
+
+    @Override
+    public List<ProductEntity> queryProductList() {
+        return orderRepository.queryProductList();
+    }
+
+    @Override
+    public String queryUserAccountQuota(String openid) {
+        return orderRepository.queryUserAccountQuota(openid);
     }
 }

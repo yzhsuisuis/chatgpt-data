@@ -2,11 +2,15 @@ package cn.bugstack.chatgpt.data.trigger.http;
 
 import cn.bugstack.chatgpt.data.domain.auth.service.IAuthService;
 import cn.bugstack.chatgpt.data.domain.order.model.entity.PayOrderEntity;
+import cn.bugstack.chatgpt.data.domain.order.model.entity.ProductEntity;
 import cn.bugstack.chatgpt.data.domain.order.model.entity.ShopCartEntity;
 import cn.bugstack.chatgpt.data.domain.order.service.IOrderService;
+import cn.bugstack.chatgpt.data.trigger.http.dto.SaleProductDTO;
 import cn.bugstack.chatgpt.data.types.common.Constants;
 import cn.bugstack.chatgpt.data.types.model.Response;
 import cn.bugstack.ltzf.payments.nativepay.NativePayService;
+import com.alibaba.fastjson.JSON;
+import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +18,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RestController()
@@ -26,6 +32,71 @@ public class SaleController {
     private IOrderService orderService;
     @Resource
     private NativePayService nativePayService;
+
+
+    @Resource
+    private EventBus eventBus;
+    @RequestMapping(value = "query_useraccount_quota", method = RequestMethod.GET)
+    public Response<String> queryUserAccountQuota(@RequestHeader("Authorization") String token) {
+        // 1. Token 校验
+        boolean success = authService.checkToken(token);
+        if (!success) {
+            return Response.<String>builder()
+                    .code(Constants.ResponseCode.TOKEN_ERROR.getCode())
+                    .info(Constants.ResponseCode.TOKEN_ERROR.getInfo())
+                    .build();
+        }
+
+        String openid = authService.openid(token);
+        String surplusQuota = orderService.queryUserAccountQuota(openid);
+        return Response.<String>builder()
+                .code(Constants.ResponseCode.SUCCESS.getCode())
+                .info(Constants.ResponseCode.SUCCESS.getInfo())
+                .data(surplusQuota)
+                .build();
+    }
+
+    @RequestMapping(value = "query_product_list", method = RequestMethod.GET)
+    public Response<List<SaleProductDTO>> queryProductList(@RequestHeader("Authorization") String token) {
+        try {
+            // 1. Token 校验
+            boolean success = authService.checkToken(token);
+            if (!success) {
+                return Response.<List<SaleProductDTO>>builder()
+                        .code(Constants.ResponseCode.TOKEN_ERROR.getCode())
+                        .info(Constants.ResponseCode.TOKEN_ERROR.getInfo())
+                        .build();
+            }
+            // 2. 查询商品
+            List<ProductEntity> productEntityList = orderService.queryProductList();
+            log.info("商品查询 {}", JSON.toJSONString(productEntityList));
+
+            List<SaleProductDTO> mallProductDTOS = new ArrayList<>();
+            for (ProductEntity productEntity : productEntityList) {
+                SaleProductDTO mallProductDTO = SaleProductDTO.builder()
+                        .productId(productEntity.getProductId())
+                        .productName(productEntity.getProductName())
+                        .productDesc(productEntity.getProductDesc())
+                        .price(productEntity.getPrice())
+                        .quota(productEntity.getQuota())
+                        .build();
+                mallProductDTOS.add(mallProductDTO);
+            }
+
+            // 3. 返回结果
+            return Response.<List<SaleProductDTO>>builder()
+                    .code(Constants.ResponseCode.SUCCESS.getCode())
+                    .info(Constants.ResponseCode.SUCCESS.getInfo())
+                    .data(mallProductDTOS)
+                    .build();
+        } catch (Exception e) {
+            log.error("商品查询失败", e);
+            return Response.<List<SaleProductDTO>>builder()
+                    .code(Constants.ResponseCode.UN_ERROR.getCode())
+                    .info(Constants.ResponseCode.UN_ERROR.getInfo())
+                    .build();
+        }
+    }
 
 
     @RequestMapping(value = "create_pay_order", method = RequestMethod.POST)
@@ -137,6 +208,9 @@ public class SaleController {
                 if(isSuccess)
                 {
                     log.info("订单修改完成");
+                    //这里查询出来的out_trade_no,就是订单的唯一标识,就是order_id
+                    eventBus.post(out_trade_no);
+
                 }
             }
             return "SUCCESS";

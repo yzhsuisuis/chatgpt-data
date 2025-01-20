@@ -1,22 +1,28 @@
 package cn.bugstack.chatgpt.data.infrastructure.repository;
 
+import cn.bugstack.chatgpt.data.domain.auth.service.IAuthService;
 import cn.bugstack.chatgpt.data.domain.order.model.aggregates.CreateOrderAggregate;
 import cn.bugstack.chatgpt.data.domain.order.model.entity.*;
 import cn.bugstack.chatgpt.data.domain.order.model.valobj.PayStatusVO;
 import cn.bugstack.chatgpt.data.domain.order.repository.IOrderRepository;
 import cn.bugstack.chatgpt.data.infrastructure.dao.IOpenAIOrderDao;
 import cn.bugstack.chatgpt.data.infrastructure.dao.IOpenAIProductDao;
+import cn.bugstack.chatgpt.data.infrastructure.dao.IUserAccountDao;
 import cn.bugstack.chatgpt.data.infrastructure.po.OpenAIOrderPO;
 import cn.bugstack.chatgpt.data.infrastructure.po.OpenAIProductPO;
+import cn.bugstack.chatgpt.data.infrastructure.po.UserAccountPO;
 import cn.bugstack.chatgpt.data.types.enums.OpenAIProductEnableModel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-
+import java.util.List;
+@Slf4j
 @Repository
 public class OrderRepository implements IOrderRepository {
     @Resource
@@ -24,6 +30,9 @@ public class OrderRepository implements IOrderRepository {
 
     @Resource
     private IOpenAIProductDao openAIProductDao;
+
+    @Resource
+    private IUserAccountDao userAccountDao;
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -106,6 +115,7 @@ public class OrderRepository implements IOrderRepository {
         OpenAIOrderPO openAIOrderPO = new OpenAIOrderPO();
         openAIOrderPO.setOrderId(out_trade_no);
         //这里就是存入的decimal类型的字段
+        log.info("total_fee转化成new BigDecimal:{}",new BigDecimal(total_fee));
         openAIOrderPO.setPayAmount(new BigDecimal(total_fee));
         openAIOrderPO.setTransactionId(order_no);
         /*
@@ -117,5 +127,69 @@ public class OrderRepository implements IOrderRepository {
         return openAIOrderDao.changeOrderPaySuccess(openAIOrderPO);
 
 
+    }
+
+    @Override
+    public void deliverGoods(String orderId) {
+        OpenAIOrderPO openAIOrderPO = openAIOrderDao.queryOrder(orderId);
+        // 1. 变更发货状态
+        int updateOrderStatusDeliverGoodsCount = openAIOrderDao.updateOrderStatusDeliverGoods(orderId);
+        if (1 != updateOrderStatusDeliverGoodsCount) throw new RuntimeException("updateOrderStatusDeliverGoodsCount update count is not equal 1");
+        // 2. 账户额度变更
+        UserAccountPO userAccountPO = userAccountDao.queryUserAccount(openAIOrderPO.getOpenid());
+        UserAccountPO userAccountPOReq = new UserAccountPO();
+        userAccountPOReq.setOpenid(openAIOrderPO.getOpenid());
+        userAccountPOReq.setTotalQuota(openAIOrderPO.getProductQuota());
+        userAccountPOReq.setSurplusQuota(openAIOrderPO.getProductQuota());
+        if (null != userAccountPO){
+            int addAccountQuotaCount = userAccountDao.addAccountQuota(userAccountPOReq);
+            if (1 != addAccountQuotaCount) throw new RuntimeException("addAccountQuotaCount update count is not equal 1");
+        } else {
+            userAccountDao.insert(userAccountPOReq);
+        }
+    }
+
+    @Override
+    public List<String> queryTimeoutCloseOrderList() {
+        return openAIOrderDao.queryTimeoutCloseOrderList();
+
+    }
+
+    @Override
+    public boolean changeOrderClose(String orderId) {
+        return openAIOrderDao.changeOrderClose(orderId);
+    }
+
+    @Override
+    public List<String> queryNoPayNotifyOrder() {
+        return openAIOrderDao.queryNoPayNotifyOrder();
+    }
+
+    @Override
+    public List<String> queryReplenishmentOrder() {
+        return openAIOrderDao.queryReplenishmentOrder();
+    }
+
+    @Override
+    public List<ProductEntity> queryProductList() {
+        List<OpenAIProductPO> openAIProductPOList =  openAIProductDao.queryProductList();
+        List<ProductEntity> productEntityList = new ArrayList<>(openAIProductPOList.size());
+        for (OpenAIProductPO openAIProductPO : openAIProductPOList) {
+            ProductEntity productEntity = new ProductEntity();
+            productEntity.setProductId(openAIProductPO.getProductId());
+            productEntity.setProductName(openAIProductPO.getProductName());
+            productEntity.setProductDesc(openAIProductPO.getProductDesc());
+            productEntity.setQuota(openAIProductPO.getQuota());
+            productEntity.setPrice(openAIProductPO.getPrice());
+            productEntityList.add(productEntity);
+        }
+        return productEntityList;
+    }
+
+    @Override
+    public String queryUserAccountQuota(String openid) {
+        UserAccountPO userAccountPO = userAccountDao.queryUserAccount(openid);
+        Integer surplusQuota = userAccountPO.getSurplusQuota();
+        return surplusQuota.toString();
     }
 }

@@ -21,7 +21,6 @@ services:
       - CHATGPT_SDK_CONFIG_API_KEY=sk-qCLfaKkF8EOQ6mZj4d7d953681B04f50B7A718737dEd9961
       - WX_CONFIG_ORIGINALID=gh_3bbe530ed638
       - WX_CONFIG_APPID=wx7cc0de005680424b
-      - WX_CONFIG_TOKEN=b8b6
     volumes:
       - ./log:/data/log
     logging:
@@ -30,12 +29,16 @@ services:
         max-size: "10m"
         max-file: "3"
     restart: always
+networks:
+  my-network:
+    driver: bridge
 
-  chatgpt-web:
-    container_name: chatgpt-web
-    image: fuzhengwei/chatgpt-web:1.0
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_HOST_URL=http://localhost:8091
-    restart: always
+#
+#  chatgpt-web:
+#    container_name: chatgpt-web
+#    image: fuzhengwei/chatgpt-web:1.0
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - NEXT_PUBLIC_API_HOST_URL=http://localhost:8091
+#    restart: always
